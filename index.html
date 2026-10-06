@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://kqahazjjjsvpkegeopgu.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="theme-color" content="#0B1F3A">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>E-Way Bill Studio</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font:14px/1.45 "Segoe UI",Inter,system-ui,-apple-system,Roboto,Arial,sans-serif;-webkit-user-select:none;user-select:none}
+body{background:radial-gradient(1200px 600px at 15% 10%,#1B4A7A 0%,transparent 60%),radial-gradient(900px 500px at 90% 90%,#3A2A63 0%,transparent 55%),#081A31;color:#E8EEF7;display:grid;place-items:center;min-height:100vh;padding:16px}
+.g{width:min(420px,100%);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:30px 28px 24px;box-shadow:0 30px 80px rgba(0,0,0,.45);backdrop-filter:blur(10px)}
+.lk{width:62px;height:62px;border-radius:18px;background:linear-gradient(135deg,#F2C14E,#E08E0B);display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 10px 30px rgba(242,193,78,.35)}
+h1{margin:0;text-align:center;font-size:20px;font-weight:700}
+p.s{margin:4px 0 22px;text-align:center;color:#9FB2CC;font-size:12.5px}
+label{display:block;font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#9FB2CC;margin:12px 0 6px}
+.in{position:relative}
+input{width:100%;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:13px 44px 13px 14px;color:#fff;font:inherit;font-size:15px;-webkit-user-select:text;user-select:text}
+input:focus{outline:2px solid #F2C14E;border-color:transparent}
+.eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:#9FB2CC;cursor:pointer;padding:6px;border-radius:8px}
+button.go{width:100%;margin-top:18px;border:0;border-radius:12px;padding:13px;background:linear-gradient(135deg,#F2C14E,#E3A21F);color:#0B1F3A;font:inherit;font-weight:800;font-size:15px;cursor:pointer}
+button.go:disabled{opacity:.6;cursor:wait}
+.msg{min-height:20px;margin-top:12px;text-align:center;font-size:12.8px;color:#FFB4A9}
+.msg.ok{color:#BFF0D9}
+.ft{margin-top:18px;display:flex;justify-content:center;gap:14px;flex-wrap:wrap;font-size:11.5px;color:#7F93AF}
+.ft span{display:inline-flex;align-items:center;gap:6px}
+.ft i{width:6px;height:6px;border-radius:50%;background:#4ADE80}
+.shake{animation:sh .35s}
+@keyframes sh{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.hide{display:none}
+</style>
+</head><body>
+<form class="g" id="gate" autocomplete="on">
+  <div class="lk"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2.2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+  <h1>E-Way Bill Studio</h1>
+  <p class="s">Restricted access · authorised account only</p>
+  <div id="fields">
+    <label for="em">Email</label>
+    <div class="in"><input type="email" id="em" autocomplete="username" spellcheck="false" required></div>
+    <label for="pw">Password</label>
+    <div class="in"><input type="password" id="pw" autocomplete="current-password" spellcheck="false" required><button type="button" class="eye" id="eye" aria-label="Show password">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+    <button class="go" id="go" type="submit">Sign in</button>
+  </div>
+  <div class="msg" id="msg"></div>
+  <div class="ft"><span><i></i>Encrypted application</span><span>Code and key held privately in the database</span></div>
+</form>
+<script src="vendor/supabase.js"></script>
+<script>
+(function(){
+'use strict';
+var SB_URL='https://kqahazjjjsvpkegeopgu.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxYWhhempqanN2cGtlZ2VvcGd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExOTEwNjAsImV4cCI6MjEwNjc2NzA2MH0.gERW2EK5svGYoIxTLxIhGN2WckB-VRR9eVMu088Wm9A',APP='ewb-studio',BUCKET='ewb-private',OBJ='app.enc';
+var $=function(i){return document.getElementById(i)};
+var enc=new TextEncoder(),dec=new TextDecoder();
+function msg(t,ok){var m=$('msg');m.textContent=t||'';m.className='msg'+(ok?' ok':'');}
+function busy(on,t){$('go').disabled=on;$('go').textContent=on?(t||'Signing in…'):'Sign in';}
+function b64d(s){var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+function gunzip(u){return new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();}
+var LS={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+function lockedFor(){return Math.max(0,(+(LS.get('ewbs.until')||0))-Date.now());}
+function fail(text){var f=(+(LS.get('ewbs.fails')||0))+1;LS.set('ewbs.fails',String(f));
+  var g=$('gate');g.classList.remove('shake');void g.offsetWidth;g.classList.add('shake');
+  if(f>=5){var mins=Math.min(60,5*Math.pow(2,Math.floor(f/5)-1));LS.set('ewbs.until',String(Date.now()+mins*60000));msg('Too many attempts. Try again in '+mins+' minutes.');}
+  else msg((text||'Incorrect email or password')+' · '+(5-f)+' attempt(s) left');}
+if(!window.supabase||!window.crypto||!crypto.subtle||typeof DecompressionStream==='undefined'){msg('Please open this page in the latest Microsoft Edge or Google Chrome.');busy(true,'Unavailable');return;}
+var SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'ewbstudio_auth_v1',storage:window.sessionStorage}});
+
+function mount(txt,email){
+  var P=JSON.parse(txt);
+  document.title=P.title||document.title;
+  document.head.querySelectorAll('style').forEach(function(s){s.remove();});
+  var st=document.createElement('style');st.textContent=P.css;document.head.appendChild(st);
+  document.documentElement.style.colorScheme='light';
+  document.body.innerHTML=P.html;
+  window.VAULT=Object.freeze({user:email,lock:function(){SB.auth.signOut().finally(function(){location.reload();});}});
+  P.js.forEach(function(code){var s=document.createElement('script');s.textContent=code;document.body.appendChild(s);});
+}
+async function enter(session){
+  busy(true,'Verifying access…');msg('');
+  var r=await SB.from('app_secrets').select('k').eq('app',APP).maybeSingle();
+  if(r.error||!r.data||!r.data.k){await SB.auth.signOut();busy(false);msg(r.error&&/fetch|network/i.test(r.error.message)?'Network error — check the connection and try again.':'This account is not authorised for this application.');return;}
+  busy(true,'Opening…');
+  var tok=(await SB.auth.getSession()).data.session;tok=tok&&tok.access_token;
+  var res=await fetch(SB_URL+'/storage/v1/object/authenticated/'+BUCKET+'/'+OBJ,{headers:{Authorization:'Bearer '+tok,apikey:SB_KEY},cache:'no-store'});
+  if(!res.ok){busy(false);msg(res.status===400||res.status===404?'Application package is not installed yet. Open the install file once and sign in.':'Could not load the application ('+res.status+').');return;}
+  var env=await res.json();
+  var key=await crypto.subtle.importKey('raw',b64d(r.data.k),{name:'AES-GCM'},false,['decrypt']);
+  r=null;
+  var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(env.i)},key,b64d(env.d));
+  var txt=dec.decode(await gunzip(new Uint8Array(pt)));
+  LS.set('ewbs.fails','0');LS.set('ewbs.until','0');
+  mount(txt,session.user.email);
+}
+$('eye').onclick=function(){var i=$('pw');i.type=i.type==='password'?'text':'password';i.focus();};
+document.addEventListener('contextmenu',function(e){e.preventDefault();});
+$('gate').addEventListener('submit',async function(e){
+  e.preventDefault();
+  var w=lockedFor();if(w>0){msg('Locked. Try again in '+Math.ceil(w/60000)+' min.');return;}
+  busy(true);msg('');
+  try{
+    var r=await SB.auth.signInWithPassword({email:$('em').value.trim(),password:$('pw').value});
+    $('pw').value='';
+    if(r.error){busy(false);if(/fetch|network/i.test(r.error.message))msg('Network error — check the connection and try again.');else fail();return;}
+    await enter(r.data.session);
+  }catch(err){busy(false);msg('Could not open the application: '+(err&&err.message||err));}
+});
+(async function(){
+  var t=lockedFor();if(t>0)msg('Locked after repeated attempts. Try again in '+Math.ceil(t/60000)+' min.');
+  try{var s=(await SB.auth.getSession()).data.session;if(s)await enter(s);}catch(e){busy(false);}
+})();
+})();
+</script>
+</body></html>
