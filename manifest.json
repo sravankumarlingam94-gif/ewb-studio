@@ -1,5 +1,7 @@
 {
+  "id": "./",
   "name": "E-Way Bill Studio",
+  "description": "Coal rake e-way bill preparation",
   "short_name": "EWB Studio",
   "start_url": "./",
   "scope": "./",
