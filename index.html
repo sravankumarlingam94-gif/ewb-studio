@@ -96,8 +96,22 @@ async function enter(session){
   busy(true,'Opening…');
   var tok=(await SB.auth.getSession()).data.session;tok=tok&&tok.access_token;
   var res=await fetch(SB_URL+'/storage/v1/object/authenticated/'+BUCKET+'/'+OBJ,{headers:{Authorization:'Bearer '+tok,apikey:SB_KEY},cache:'no-store'});
-  if(!res.ok){busy(false);msg(res.status===400||res.status===404?'Application package is not installed yet. Open the install file once and sign in.':'Could not load the application ('+res.status+').');return;}
-  var env=await res.json();
+  var env=res.ok?await res.json():null;
+  /* signed update channel: a newer encrypted package published with the site is moved into private storage */
+  try{
+    var ur=await fetch('update/app.enc',{cache:'no-store'});
+    if(ur.ok){
+      var utxt=await ur.text(),upd=JSON.parse(utxt);
+      if(upd&&upd.ver&&(!env||!env.ver||upd.ver>env.ver)){
+        var k0=await crypto.subtle.importKey('raw',b64d(r.data.k),{name:'AES-GCM'},false,['decrypt']);
+        await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(upd.i)},k0,b64d(upd.d)); /* only a package made with your key is accepted */
+        busy(true,'Installing update…');
+        var up=await SB.storage.from(BUCKET).upload(OBJ,new Blob([utxt],{type:'application/octet-stream'}),{upsert:true,cacheControl:'0',contentType:'application/octet-stream'});
+        if(!up.error)env=upd;
+      }
+    }
+  }catch(e){}
+  if(!env){busy(false);msg(res.status===400||res.status===404?'Application package is not installed yet. Open the install file once and sign in.':'Could not load the application ('+res.status+').');return;}
   var key=await crypto.subtle.importKey('raw',b64d(r.data.k),{name:'AES-GCM'},false,['decrypt']);
   r=null;
   var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(env.i)},key,b64d(env.d));

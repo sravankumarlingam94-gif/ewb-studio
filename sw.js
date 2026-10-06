@@ -1,5 +1,5 @@
 /* E-Way Bill Studio: install support. Caches only the public sign-in shell; the application itself is never cached. */
-var CACHE = 'ewbs-shell-v1';
+var CACHE = 'ewbs-shell-v2';
 var CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './vendor/supabase.js'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(CORE); }).then(function () { return self.skipWaiting(); }));
@@ -12,7 +12,8 @@ self.addEventListener('activate', function (e) {
 self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET') return;
-  if (new URL(req.url).origin !== self.location.origin) return;   /* database / storage calls are never touched */
+  var u = new URL(req.url);
+  if (u.origin !== self.location.origin || u.pathname.indexOf('/update/') >= 0) return;   /* database / storage calls are never touched */
   if (req.mode === 'navigate') {
     e.respondWith(fetch(req).then(function (res) {
       var copy = res.clone(); caches.open(CACHE).then(function (c) { c.put('./index.html', copy); }); return res;
